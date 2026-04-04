@@ -33,6 +33,9 @@ var (
 	unifiLogCleanupUser     string
 	unifiLogCleanupPassword string
 	unifiLogCleanupMinutes  int
+	// Metrics settings
+	enableMetrics          bool
+	crowdsecMetricsMinutes int
 )
 
 func initConfig() {
@@ -80,6 +83,11 @@ func initConfig() {
 	viper.BindEnv("unifi_log_cleanup_password")
 	viper.BindEnv("unifi_log_cleanup_minutes")
 	viper.SetDefault("unifi_log_cleanup_minutes", 30)
+
+	viper.BindEnv("enable_metrics")
+	viper.SetDefault("enable_metrics", "false")
+	viper.BindEnv("crowdsec_metrics_minutes")
+	viper.SetDefault("crowdsec_metrics_minutes", 15)
 
 	logLevel = viper.GetString("log_level")
 	level, err := zerolog.ParseLevel(logLevel)
@@ -143,4 +151,11 @@ func initConfig() {
 	if unifiLogCleanup && unifiLogCleanupMinutes <= 0 {
  		log.Fatal().Msg("UNIFI_LOG_CLEANUP_MINUTES must be greater than 0 when UNIFI_LOG_CLEANUP is enabled")
  	}
+
+	enableMetrics = viper.GetBool("enable_metrics")
+	crowdsecMetricsMinutes = viper.GetInt("crowdsec_metrics_minutes")
+	
+	if enableMetrics && crowdsecMetricsMinutes <= 0 {
+		log.Fatal().Msg("CROWDSEC_METRICS_MINUTES must be greater than 0 when ENABLE_METRICS is enabled")
+	}
 }

@@ -105,6 +105,18 @@ func main() {
 		log.Info().Msgf("Audit log cleanup will run every %d minutes", unifiLogCleanupMinutes)
 	}
 
+	// Timer for metrics collection
+	var metricsTimer *time.Ticker
+	var metricsChan <-chan time.Time
+	var collector *metricsCollector
+	if enableMetrics {
+		collector = newMetricsCollector(&mal, version)
+		metricsTimer = time.NewTicker(time.Duration(crowdsecMetricsMinutes) * time.Minute)
+		defer metricsTimer.Stop()
+		metricsChan = metricsTimer.C
+		log.Info().Msgf("CrowdSec metrics and UniFi traffic polling will run every %d minutes", crowdsecMetricsMinutes)
+	}
+
 	// At startup, we need to call all update functions to ensure the firewall is in sync with the decisions
 	mal.modified = true
 
@@ -139,6 +151,11 @@ func main() {
 					if err := cleanupBouncerAuditEntries(unifiLogCleanupMinutes); err != nil {
 						log.Warn().Err(err).Msg("Scheduled audit log cleanup failed (non-fatal)")
 					}
+				}
+			case <-metricsChan:
+				if enableMetrics && collector != nil {
+					intervalDur := time.Duration(crowdsecMetricsMinutes) * time.Minute
+					collector.pollAndSendMetrics(ctx, bouncer.APIClient, intervalDur)
 				}
 			}
 		}
