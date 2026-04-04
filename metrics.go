@@ -35,7 +35,7 @@ func newMetricsCollector(mal *unifiAddrList, version string) *metricsCollector {
 	}
 }
 
-func (mc *metricsCollector) pollAndSendMetrics(ctx context.Context, api *apiclient.ApiClient, interval time.Duration) {
+func (mc *metricsCollector) pollAndSendMetrics(ctx context.Context, api *apiclient.ApiClient) {
 	nowMilli := time.Now().UnixMilli()
 	now := time.Now().Unix()
 

@@ -154,8 +154,7 @@ func main() {
 				}
 			case <-metricsChan:
 				if enableMetrics && collector != nil {
-					intervalDur := time.Duration(crowdsecMetricsMinutes) * time.Minute
-					collector.pollAndSendMetrics(ctx, bouncer.APIClient, intervalDur)
+					collector.pollAndSendMetrics(ctx, bouncer.APIClient)
 				}
 			}
 		}
