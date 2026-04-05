@@ -13,8 +13,7 @@ require (
 	golang.org/x/sync v0.15.0
 )
 
-// replace github.com/filipowm/go-unifi => github.com/teifun2/go-unifi v1.8.5
-replace github.com/filipowm/go-unifi => github.com/teifun2/go-unifi v1.8.6-0.20260404084626-16f64896d1e8
+replace github.com/filipowm/go-unifi => github.com/teifun2/go-unifi v1.8.6
 
 require (
 	github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2 // indirect
