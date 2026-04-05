@@ -69,7 +69,7 @@ The bouncer configuration is made via environment variables:
 | `CROWDSEC_BOUNCER_API_KEY`    | CrowdSec bouncer API key required to be authorized to request local API                                                                         | `none`                  |    ✅    |
 | `CROWDSEC_URL`                | Host and port of CrowdSec agent                                                                                                                 | `http://crowdsec:8080/` |    ✅    |
 | `CROWDSEC_ORIGINS`            | Space separated list of CrowdSec origins to filter from LAPI (EG: "crowdsec cscli")                                                             | `none`                  |    ❌    |
-| `CROWDSEC_UPDATE_INTERVAL`    | Interval Frequency Querying the Crowdsec API for changes to the blocklist.                                                                      | `5s`                    |    ❌    |
+| ``    | Interval Frequency Querying the Crowdsec API for changes to the blocklist.                                                                      | `5s`                    |    ❌    |
 | `CROWDSEC_SKIP_TLS_VERIFY`    | Skips Certificate check for CrowdSec LAPI without proper SSL Certificate                                                                        | `false`                 |    ❌    |
 | `LOG_LEVEL`                   | Minimum log level for bouncer (`trace`, `debug`, `info`, `warn`, `error`, `fatal`, `panic`)                                                     | `info`                  |    ❌    |
 | `UNIFI_HOST`                  | Unifi appliance address                                                                                                                         | `none`                  |    ✅    |
@@ -86,10 +86,12 @@ The bouncer configuration is made via environment variables:
 | `UNIFI_ZONE_SRC`              | Space separated list of Source Zones for Firewall Policy in Zone Based mode                                                                     | `External`              |    ❌    |
 | `UNIFI_ZONE_DST`              | Space separated list of Destination Zones for Firewall Policy in Zone Based mode                                                                | `Internal Vpn Hotspot`  |    ❌    |
 | `UNIFI_POLICY_REORDERING`     | Enable automatic reordering of firewall policies to ensure cs-unifi-bouncer policies have highest priority (before custom and default policies) | `true`                  |    ❌    |
-| `UNIFI_LOG_CLEANUP`           | Enable automatic cleanup of MongoDB audit log entries to prevent CPU overload (see [Troubleshooting](#mongodb-cpu-overload))                   | `false`                 |    ❌    |
-| `UNIFI_LOG_CLEANUP_USER`      | SSH username for audit log cleanup (usually `root` for UDM devices)                                                                            | `root`                  |    ❌    |
-| `UNIFI_LOG_CLEANUP_PASSWORD`  | SSH password for audit log cleanup                                                                                                             | `none`                  | ✅ if cleanup enabled |
-| `UNIFI_LOG_CLEANUP_MINUTES`   | How often (in minutes) the audit log cleanup runs and how far back (in minutes) it removes audit log entries                                   | `30`                    |    ❌    |
+| `UNIFI_LOG_CLEANUP`           | Enable automatic cleanup of MongoDB audit log entries to prevent CPU overload (see [Troubleshooting](#mongodb-cpu-overload))                    | `false`                 |    ❌    |
+| `UNIFI_LOG_CLEANUP_USER`      | SSH username for audit log cleanup (usually `root` for UDM devices)                                                                             | `root`                  |    ❌    |
+| `UNIFI_LOG_CLEANUP_PASSWORD`  | SSH password for audit log cleanup                                                                                                              | `none`                  | ✅ if cleanup enabled |
+| `UNIFI_LOG_CLEANUP_MINUTES`   | How often (in minutes) the audit log cleanup runs and how far back (in minutes) it removes audit log entries                                    | `30`                    |    ❌    |
+| `ENABLE_METRICS`              | Enable tracking and reporting of dropped requests metrics to CrowdSec using UniFi traffic flows.                                                | `false`                 |    ❌    |
+| `CROWDSEC_METRICS_MINUTES`    | How often (in minutes) to poll UniFi for new traffic flows and send metrics back to CrowdSec.                                                   | `15`                    |    ❌    |
 
 # Troubleshooting
 
