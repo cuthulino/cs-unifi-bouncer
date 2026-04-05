@@ -40,37 +40,49 @@ func (mc *metricsCollector) pollAndSendMetrics(ctx context.Context, api *apiclie
 	now := time.Now().Unix()
 
 	req := &unifi.TrafficFlowsRequest{
-		Action:        []string{"blocked"},
 		TimestampFrom: mc.lastPollTimeMilli,
 		TimestampTo:   nowMilli,
 		PageSize:      1000,
-	}
-
-	flows, err := mc.mal.c.GetTrafficFlows(ctx, unifiSite, req)
-	if err != nil {
-		log.Warn().Err(err).Msg("Failed to fetch traffic flows for metrics from UniFi")
-		return
-	}
-
-	if flows.TotalPageCount > 1 {
-		log.Warn().Msg("UniFi API returned paginated traffic flows! Some blocked events may be missed. Recommendation: decrease CROWDSEC_METRICS_MINUTES interval.")
+		PageNumber:    0,
 	}
 
 	var dropped int64 = 0
+	var processed int64 = 0
 
-	for _, flow := range flows.Data {
-		for _, policy := range flow.Policies {
-			if strings.Contains(policy.Name, "cs-unifi-bouncer") {
-				dropped++
-				break
+	for {
+		flows, err := mc.mal.c.GetTrafficFlows(ctx, unifiSite, req)
+		if err != nil {
+			log.Warn().Err(err).Msg("Failed to fetch traffic flows for metrics from UniFi")
+			return
+		}
+
+		for _, flow := range flows.Data {
+			processed++
+			if flow.Action == "blocked" {
+				for _, policy := range flow.Policies {
+					if strings.Contains(policy.Name, "cs-unifi-bouncer") {
+						dropped++
+						break
+					}
+				}
 			}
 		}
+
+		if !flows.HasNext {
+			break
+		}
+
+		req.PageNumber++
 	}
-	log.Info().Msgf("Processed %d new blocked traffic events from UniFi, reporting to CrowdSec", dropped)
+	log.Info().Msgf("Processed %d total traffic events, %d blocked by UniFi Bouncer, reporting to CrowdSec", processed, dropped)
 
 	nameDropped := "dropped"
+	nameProcessed := "processed"
+	nameActiveDecisions := "active_decisions"
 	unitRequest := "request"
 	valueDropped := float64(dropped)
+	valueProcessed := float64(processed)
+	valueActiveDecisions := float64(len(mc.mal.blockedAddresses[true]) + len(mc.mal.blockedAddresses[false]))
 
 	window := now - mc.lastPollTime
 
@@ -99,6 +111,15 @@ func (mc *metricsCollector) pollAndSendMetrics(ctx context.Context, api *apiclie
 										"remediation": "ban",
 									},
 								},
+								{
+									Name:  &nameProcessed,
+									Unit:  &unitRequest,
+									Value: &valueProcessed,
+								},
+								{
+									Name:  &nameActiveDecisions,
+									Value: &valueActiveDecisions,
+								},
 							},
 							Meta: &models.MetricsMeta{
 								UtcNowTimestamp:   &now,
@@ -114,7 +135,7 @@ func (mc *metricsCollector) pollAndSendMetrics(ctx context.Context, api *apiclie
 	mc.lastPollTimeMilli = nowMilli
 	mc.lastPollTime = now
 
-	_, _, err = api.UsageMetrics.Add(ctx, payload)
+	_, _, err := api.UsageMetrics.Add(ctx, payload)
 	switch {
 	case err != nil:
 		log.Warn().Err(err).Msg("failed to send metrics")
