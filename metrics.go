@@ -40,6 +40,7 @@ func (mc *metricsCollector) pollAndSendMetrics(ctx context.Context, api *apiclie
 	now := time.Now().Unix()
 
 	req := &unifi.TrafficFlowsRequest{
+		Action:        []string{"blocked"},
 		TimestampFrom: mc.lastPollTimeMilli,
 		TimestampTo:   nowMilli,
 		PageSize:      1000,
@@ -47,7 +48,6 @@ func (mc *metricsCollector) pollAndSendMetrics(ctx context.Context, api *apiclie
 	}
 
 	var dropped int64 = 0
-	var processed int64 = 0
 
 	for {
 		flows, err := mc.mal.c.GetTrafficFlows(ctx, unifiSite, req)
@@ -57,7 +57,6 @@ func (mc *metricsCollector) pollAndSendMetrics(ctx context.Context, api *apiclie
 		}
 
 		for _, flow := range flows.Data {
-			processed++
 			if flow.Action == "blocked" {
 				for _, policy := range flow.Policies {
 					if strings.Contains(policy.Name, "cs-unifi-bouncer") {
@@ -74,15 +73,13 @@ func (mc *metricsCollector) pollAndSendMetrics(ctx context.Context, api *apiclie
 
 		req.PageNumber++
 	}
-	log.Info().Msgf("Processed %d total traffic events, %d blocked by UniFi Bouncer, reporting to CrowdSec", processed, dropped)
+	log.Info().Msgf("Processed %d new blocked traffic events from UniFi, reporting to CrowdSec", dropped)
 
 	nameDropped := "dropped"
-	nameProcessed := "processed"
-	nameActiveDecisions := "active_decisions"
+	// nameActiveDecisions := "active_decisions"
 	unitRequest := "request"
 	valueDropped := float64(dropped)
-	valueProcessed := float64(processed)
-	valueActiveDecisions := float64(len(mc.mal.blockedAddresses[true]) + len(mc.mal.blockedAddresses[false]))
+	// valueActiveDecisions := float64(len(mc.mal.blockedAddresses[true]) + len(mc.mal.blockedAddresses[false]))
 
 	window := now - mc.lastPollTime
 
@@ -111,15 +108,10 @@ func (mc *metricsCollector) pollAndSendMetrics(ctx context.Context, api *apiclie
 										"remediation": "ban",
 									},
 								},
-								{
-									Name:  &nameProcessed,
-									Unit:  &unitRequest,
-									Value: &valueProcessed,
-								},
-								{
-									Name:  &nameActiveDecisions,
-									Value: &valueActiveDecisions,
-								},
+								// {
+								// 	Name:  &nameActiveDecisions,
+								// 	Value: &valueActiveDecisions,
+								// },
 							},
 							Meta: &models.MetricsMeta{
 								UtcNowTimestamp:   &now,
