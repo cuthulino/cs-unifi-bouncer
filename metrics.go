@@ -124,14 +124,13 @@ func (mc *metricsCollector) pollAndSendMetrics(ctx context.Context, api *apiclie
 		},
 	}
 
-	mc.lastPollTimeMilli = nowMilli
-	mc.lastPollTime = now
-
 	_, _, err := api.UsageMetrics.Add(ctx, payload)
 	switch {
 	case err != nil:
 		log.Warn().Err(err).Msg("failed to send metrics")
 	default:
+		mc.lastPollTimeMilli = nowMilli
+		mc.lastPollTime = now
 		log.Debug().Msg("usage metrics successfully sent")
 	}
 }
