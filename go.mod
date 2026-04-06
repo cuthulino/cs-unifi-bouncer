@@ -5,6 +5,7 @@ go 1.24.1
 require (
 	github.com/crowdsecurity/crowdsec v1.6.8
 	github.com/crowdsecurity/go-cs-bouncer v0.0.16
+	github.com/crowdsecurity/go-cs-lib v0.0.16
 	github.com/filipowm/go-unifi v1.8.1
 	github.com/rs/zerolog v1.34.0
 	github.com/spf13/viper v1.20.1
@@ -12,7 +13,7 @@ require (
 	golang.org/x/sync v0.15.0
 )
 
-replace github.com/filipowm/go-unifi => github.com/teifun2/go-unifi v1.8.5
+replace github.com/filipowm/go-unifi => github.com/teifun2/go-unifi v1.8.6
 
 require (
 	github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2 // indirect
@@ -39,7 +40,6 @@ require (
 require (
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
-	github.com/crowdsecurity/go-cs-lib v0.0.16 // indirect
 	github.com/go-viper/mapstructure/v2 v2.2.1 // indirect
 	github.com/goccy/go-yaml v1.17.1 // indirect
 	github.com/golang-jwt/jwt/v4 v4.5.2 // indirect
