@@ -139,6 +139,8 @@ environment:
 
 This feature connects via SSH to your UniFi device periodically (based on `UNIFI_LOG_CLEANUP_MINUTES`) and cleans up the verbose audit log entries, replacing thousands of individual IP entries with a simple "Updated from bouncer" message. This preserves the audit trail while eliminating the performance impact.
 
+**Large imported blocklists:** MongoDB capping and audit-log cleanup reduce the storage and database impact of UniFi's verbose audit logs, but they do not remove the cost of applying very large firewall address-group updates in UniFi Network itself. The bouncer sorts addresses before splitting them into `cs-unifi-bouncer-ipv4-N` / `cs-unifi-bouncer-ipv6-N` groups and skips posting groups whose members are unchanged, which reduces churn from repeated updates. Very large decision sets can still make UniFi Network busy, especially when an address insert or removal shifts later sorted chunks; if the controller becomes slow, reduce imported lists/origins or lower the total number of decisions sent to UniFi.
+
 **⚠️ Security Warning (Solution B only):**
 
 This feature requires enabling SSH access on your UniFi device and storing the SSH password in your configuration. Please be aware:

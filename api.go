@@ -84,7 +84,7 @@ func (mal *unifiAddrList) postFirewallPolicy(ctx context.Context, ID string, pol
 		Enabled:             true,
 		Name:                policyName,
 		ConnectionStateType: "CUSTOM",
-		ConnectionStates:  []string{"NEW", "INVALID"},
+		ConnectionStates:    []string{"NEW", "INVALID"},
 		Protocol:            "all",
 		IPVersion:           ipVersion,
 		Logging:             unifiLogging,
@@ -146,6 +146,13 @@ func (mal *unifiAddrList) postFirewallGroup(ctx context.Context, ID string, grou
 		groupType = "ipv6-address-group"
 	}
 
+	if ID != "" {
+		if cachedMembers, exists := mal.cachedFirewallGroupMembers(ipv6, groupName); exists && sameStringSet(cachedMembers, members) {
+			log.Debug().Msgf("Skipping unchanged firewall group: %s", groupName)
+			return ID
+		}
+	}
+
 	group := &unifi.FirewallGroup{
 		Name:         groupName,
 		GroupType:    groupType,
@@ -167,6 +174,7 @@ func (mal *unifiAddrList) postFirewallGroup(ctx context.Context, ID string, grou
 		if ID != "" && errors.Is(err, unifi.ErrNotFound) {
 			log.Debug().Msgf("No update needed for firewall group: %s", groupName)
 			mal.firewallGroups[ipv6][group.Name] = group.ID
+			mal.cacheFirewallGroupMembers(ipv6, group.Name, group.GroupMembers)
 			return group.ID
 		}
 		log.Fatal().Err(err).Msgf("Failed to post firewall group: %v", group)
@@ -177,6 +185,7 @@ func (mal *unifiAddrList) postFirewallGroup(ctx context.Context, ID string, grou
 		}
 		log.Info().Msg("Firewall group posted")
 		mal.firewallGroups[ipv6][group.Name] = group.ID
+		mal.cacheFirewallGroupMembers(ipv6, group.Name, group.GroupMembers)
 		return group.ID
 	}
 }
