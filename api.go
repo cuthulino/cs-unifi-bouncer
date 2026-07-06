@@ -44,6 +44,11 @@ func (mal *unifiAddrList) postFirewallRule(ctx context.Context, index int, ID st
 		Logging:             unifiLogging,
 	}
 
+	// Set destination port group if specified
+	if unifiBlockedPortsList != "" {
+		firewallRule.DstPortGroupID = unifiBlockedPortsList
+	}
+
 	if !ipv6 {
 		firewallRule.SrcNetworkType = "NETv4"
 		firewallRule.DstNetworkType = "NETv4"
@@ -79,6 +84,14 @@ func (mal *unifiAddrList) postFirewallPolicy(ctx context.Context, ID string, pol
 	srcZoneId := mal.firewallZones[srcZone].id
 	dstZoneId := mal.firewallZones[dstZone].id
 
+	// Determine port matching type based on unifiBlockedPortsList
+	portMatchingType := "ANY"
+	portGroupID := ""
+	if unifiBlockedPortsList != "" {
+		portMatchingType = "OBJECT"
+		portGroupID = unifiBlockedPortsList
+	}
+
 	firewallZonePolicy := &unifi.FirewallZonePolicy{
 		Action:              "BLOCK",
 		Enabled:             true,
@@ -93,13 +106,14 @@ func (mal *unifiAddrList) postFirewallPolicy(ctx context.Context, ID string, pol
 			ZoneID:             srcZoneId,
 			MatchingTarget:     "IP",
 			MatchingTargetType: "OBJECT",
-			PortMatchingType:   "ANY",
+			PortMatchingType:   portMatchingType,
 			IPGroupID:          groupId,
 		},
 		Destination: unifi.FirewallZonePolicyDestination{
 			ZoneID:           dstZoneId,
 			MatchingTarget:   "ANY",
-			PortMatchingType: "ANY",
+			PortMatchingType: portMatchingType,
+			PortGroupID:      portGroupID,
 		},
 		Schedule: unifi.FirewallZonePolicySchedule{
 			Mode: "ALWAYS",
