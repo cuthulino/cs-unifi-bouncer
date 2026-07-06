@@ -50,6 +50,10 @@ func (mal *unifiAddrList) initUnifi(ctx context.Context) {
 	mal.firewallGroups[true] = make(map[string]string)
 	mal.firewallGroups[false] = make(map[string]string)
 
+	mal.firewallGroupMembers = make(map[bool]map[string][]string)
+	mal.firewallGroupMembers[true] = make(map[string][]string)
+	mal.firewallGroupMembers[false] = make(map[string][]string)
+
 	mal.firewallRule = make(map[bool]map[string]FirewallRuleCache)
 	mal.firewallRule[true] = make(map[string]FirewallRuleCache)
 	mal.firewallRule[false] = make(map[string]FirewallRuleCache)
@@ -82,6 +86,7 @@ func (mal *unifiAddrList) initUnifi(ctx context.Context) {
 			ipv6 := strings.Contains(group.Name, "ipv6")
 
 			mal.firewallGroups[ipv6][group.Name] = group.ID
+			mal.firewallGroupMembers[ipv6][group.Name] = sortedStrings(group.GroupMembers)
 			for _, member := range group.GroupMembers {
 				mal.blockedAddresses[ipv6][member] = true
 			}
@@ -151,7 +156,36 @@ func getKeys(m map[string]bool) []string {
 	for key := range m {
 		keys = append(keys, key)
 	}
+	sort.Strings(keys)
 	return keys
+}
+
+func sortedStrings(values []string) []string {
+	sorted := slices.Clone(values)
+	sort.Strings(sorted)
+	return sorted
+}
+
+func sameStringSet(a []string, b []string) bool {
+	return slices.Equal(sortedStrings(a), sortedStrings(b))
+}
+
+func (mal *unifiAddrList) cachedFirewallGroupMembers(ipv6 bool, groupName string) ([]string, bool) {
+	if mal.firewallGroupMembers == nil || mal.firewallGroupMembers[ipv6] == nil {
+		return nil, false
+	}
+	members, exists := mal.firewallGroupMembers[ipv6][groupName]
+	return members, exists
+}
+
+func (mal *unifiAddrList) cacheFirewallGroupMembers(ipv6 bool, groupName string, members []string) {
+	if mal.firewallGroupMembers == nil {
+		mal.firewallGroupMembers = make(map[bool]map[string][]string)
+	}
+	if mal.firewallGroupMembers[ipv6] == nil {
+		mal.firewallGroupMembers[ipv6] = make(map[string][]string)
+	}
+	mal.firewallGroupMembers[ipv6][groupName] = sortedStrings(members)
 }
 
 // Function to update the firewall group
