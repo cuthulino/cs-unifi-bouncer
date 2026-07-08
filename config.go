@@ -142,7 +142,7 @@ func initConfig() {
 
 	unifiPolicyReordering = viper.GetBool("unifi_policy_reordering")
 
-	unifiMinUpdateSeconds = viper.GetString("unifi_min_update_seconds")
+	unifiMinUpdateSeconds = viper.GetInt("unifi_min_update_seconds")
 
 	unifiLogCleanup = viper.GetBool("unifi_log_cleanup")
 	unifiLogCleanupUser = viper.GetString("unifi_log_cleanup_user")
