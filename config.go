@@ -1,6 +1,8 @@
 package main
 
 import (
+	"time"
+
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
@@ -28,6 +30,7 @@ var (
 	unifiZoneSrc           []string
 	unifiZoneDst           []string
 	unifiPolicyReordering  bool
+	unifiMinUpdateSeconds  int
 	// Audit log cleanup settings (to prevent MongoDB CPU overload)
 	unifiLogCleanup         bool
 	unifiLogCleanupUser     string
@@ -76,6 +79,8 @@ func initConfig() {
 	viper.SetDefault("unifi_zone_dst", "Internal Vpn Hotspot")
 	viper.BindEnv("unifi_policy_reordering")
 	viper.SetDefault("unifi_policy_reordering", "false")
+	viper.BindEnv("unifi_min_update_seconds")
+	viper.SetDefault("unifi_min_update_seconds", 0)
 	viper.BindEnv("unifi_log_cleanup")
 	viper.SetDefault("unifi_log_cleanup", "false")
 	viper.BindEnv("unifi_log_cleanup_user")
@@ -138,6 +143,8 @@ func initConfig() {
 	unifiZoneDst = viper.GetStringSlice("unifi_zone_dst")
 
 	unifiPolicyReordering = viper.GetBool("unifi_policy_reordering")
+
+	unifiMinUpdateSeconds = viper.GetString("unifi_min_update_seconds")
 
 	unifiLogCleanup = viper.GetBool("unifi_log_cleanup")
 	unifiLogCleanupUser = viper.GetString("unifi_log_cleanup_user")

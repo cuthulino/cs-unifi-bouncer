@@ -95,6 +95,16 @@ func main() {
 	inactivityTimer := time.NewTimer(10 * time.Second)
 	defer inactivityTimer.Stop()
 
+	// Timer to detect min update interval
+	var updateTimer *time.Ticker
+	var updateChan <-chan time.Time
+	if unifiMinUpdateSeconds > 0 {
+		updateTimer = time.NewTicker(time.Duration(unifiMinUpdateSeconds) * time.Second)
+		defer updateTimer.Stop()
+		updateChan = updateTimer.C
+		log.Info().Msgf("Updates to UniFi will be limited to every %s seconds", unifiMinUpdateSeconds)
+	}
+
 	// Timer for periodic audit log cleanup
 	var cleanupTimer *time.Ticker
 	var cleanupChan <-chan time.Time
@@ -119,6 +129,7 @@ func main() {
 
 	// At startup, we need to call all update functions to ensure the firewall is in sync with the decisions
 	mal.modified = true
+	mal.updateDue = true
 
 	g.Go(func() error {
 		log.Printf("Processing new and deleted decisions . . .")
@@ -138,12 +149,20 @@ func main() {
 
 				mal.decisionProcess(decisions)
 			case <-inactivityTimer.C:
-				// Execute the update to unifi when no new messages have been received
-				mal.updateFirewall(ctx, false)
-				if useIPV6 {
-					mal.updateFirewall(ctx, true)
+				// Execute the update to unifi when no new messages have been received and the update timer is due
+				if mal.updateDue {
+					mal.updateFirewall(ctx, false)
+					if useIPV6 {
+						mal.updateFirewall(ctx, true)
+					}
+					mal.modified = false
+					mal.updateDue = unifiMinUpdateSeconds == 0
 				}
-				mal.modified = false
+			case <-updateChan:
+				// allow  update to unifi after the minimum update interval has passed
+				mal.updateDue = true
+				// Reset the inactivity timer to not miss decisions while update duration
+				inactivityTimer.Reset(time.Second)
 			case <-cleanupChan:
 				// Periodically clean up audit log entries
 				if unifiLogCleanup {
