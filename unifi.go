@@ -59,7 +59,6 @@ func (mal *unifiAddrList) initUnifi(ctx context.Context) {
 	mal.firewallZonePolicy[false] = make(map[string]FirewallZonePolicyCache)
 
 	mal.modified = false
-	mal.updateDue = false
 	mal.isZoneBased = false
 	mal.firewallZones = make(map[string]ZoneCache)
 
